@@ -10,3 +10,4 @@ kramdown:
   syntax_highlighter: rouge
 include:
     - node_modules
+exclude: []
