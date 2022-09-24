@@ -1,0 +1,34 @@
+(function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const o of document.querySelectorAll('link[rel="modulepreload"]'))i(o);new MutationObserver(o=>{for(const s of o)if(s.type==="childList")for(const r of s.addedNodes)r.tagName==="LINK"&&r.rel==="modulepreload"&&i(r)}).observe(document,{childList:!0,subtree:!0});function t(o){const s={};return o.integrity&&(s.integrity=o.integrity),o.referrerpolicy&&(s.referrerPolicy=o.referrerpolicy),o.crossorigin==="use-credentials"?s.credentials="include":o.crossorigin==="anonymous"?s.credentials="omit":s.credentials="same-origin",s}function i(o){if(o.ep)return;o.ep=!0;const s=t(o);fetch(o.href,s)}})();const f={Record:{}},p=f.Record;class g{constructor(e,t){const i=window.localStorage;let o;this.getLocalStorage=()=>o||JSON.parse(i.getItem(e)||"[]"),this.setLocalStorage=s=>{i.setItem(e,JSON.stringify(o=s))},t&&t()}find(e,t){const i=this.getLocalStorage();let o;t(i.filter(s=>{for(o in e)if(e[o]!==s[o])return!1;return!0}))}update(e,t){const i=e.id,o=this.getLocalStorage();let s=o.length,r;for(;s--;)if(o[s].id===i){for(r in e)o[s][r]=e[r];break}this.setLocalStorage(o),t&&t()}insert(e,t){const i=this.getLocalStorage();i.push(e),this.setLocalStorage(i),t&&t()}remove(e,t){let i;const o=this.getLocalStorage().filter(s=>{for(i in e)if(e[i]!==s[i])return!0;return!1});this.setLocalStorage(o),t&&t(o)}count(e){this.find(p,t=>{const i=t.length;let o=i,s=0;for(;o--;)s+=t[o].completed;e(i,i-s,s)})}}function n(l,e){return(e||document).querySelector(l)}function d(l,e,t,i){l.addEventListener(e,t,!!i)}function c(l,e,t,i,o){d(l,t,r=>{const h=r.target,m=l.querySelectorAll(e);let u=m.length;for(;u--;)if(m[u]===h){i.call(h,r);break}},!!o)}const v=l=>l.replace(/[&<]/g,e=>e==="&"?"&amp;":"&lt;");class b{itemList(e){return e.reduce((t,i)=>t+`
+<li data-id="${i.id}"${i.completed?' class="completed"':""}>
+	<div class="view">
+		<input class="toggle" type="checkbox" ${i.completed?"checked":""}>
+		<label>${v(i.title)}</label>
+		<button class="destroy"></button>
+	</div>
+</li>`,"")}itemCounter(e){return`${e} item${e!==1?"s":""} left`}}const a=l=>parseInt(l.parentNode.dataset.id||l.parentNode.parentNode.dataset.id,10),I=13,w=27;class C{constructor(e){this.template=e,this.$todoList=n(".todo-list"),this.$todoItemCounter=n(".todo-count"),this.$clearCompleted=n(".clear-completed"),this.$main=n(".main"),this.$toggleAll=n(".toggle-all"),this.$newTodo=n(".new-todo"),c(this.$todoList,"li label","dblclick",({target:t})=>{this.editItem(t)})}editItem(e){const t=e.parentElement.parentElement;t.classList.add("editing");const i=document.createElement("input");i.className="edit",i.value=e.innerText,t.appendChild(i),i.focus()}showItems(e){this.$todoList.innerHTML=this.template.itemList(e)}removeItem(e){const t=n(`[data-id="${e}"]`);t&&this.$todoList.removeChild(t)}setItemsLeft(e){this.$todoItemCounter.innerHTML=this.template.itemCounter(e)}setClearCompletedButtonVisibility(e){this.$clearCompleted.style.display=e?"block":"none"}setMainVisibility(e){this.$main.style.display=e?"block":"none"}setCompleteAllCheckbox(e){this.$toggleAll.checked=!!e}updateFilterButtons(e){n(".filters .selected").className="",n(`.filters [href="#/${e}"]`).className="selected"}clearNewTodo(){this.$newTodo.value=""}setItemComplete(e,t){const i=n(`[data-id="${e}"]`);!i||(i.className=t?"completed":"",n("input",i).checked=t)}editItemDone(e,t){const i=n(`[data-id="${e}"]`),o=n("input.edit",i);i.removeChild(o),i.classList.remove("editing"),n("label",i).textContent=t}bindAddItem(e){d(this.$newTodo,"change",({target:t})=>{const i=t.value.trim();i&&e(i)})}bindRemoveCompleted(e){d(this.$clearCompleted,"click",e)}bindToggleAll(e){d(this.$toggleAll,"click",({target:t})=>{e(t.checked)})}bindRemoveItem(e){c(this.$todoList,".destroy","click",({target:t})=>{e(a(t))})}bindToggleItem(e){c(this.$todoList,".toggle","click",({target:t})=>{e(a(t),t.checked)})}bindEditItemSave(e){c(this.$todoList,"li .edit","blur",({target:t})=>{t.dataset.iscanceled||e(a(t),t.value.trim())},!0),c(this.$todoList,"li .edit","keypress",({target:t,keyCode:i})=>{i===I&&t.blur()})}bindEditItemCancel(e){c(this.$todoList,"li .edit","keyup",({target:t,keyCode:i})=>{i===w&&(t.dataset.iscanceled=!0,t.blur(),e(a(t)))})}}class L{constructor(e,t){this.store=e,this.view=t,t.bindAddItem(this.addItem.bind(this)),t.bindEditItemSave(this.editItemSave.bind(this)),t.bindEditItemCancel(this.editItemCancel.bind(this)),t.bindRemoveItem(this.removeItem.bind(this)),t.bindToggleItem((i,o)=>{this.toggleCompleted(i,o),this._filter()}),t.bindRemoveCompleted(this.removeCompletedItems.bind(this)),t.bindToggleAll(this.toggleAll.bind(this)),this._activeRoute="",this._lastActiveRoute=null}setView(e){const t=e.replace(/^#\//,"");this._activeRoute=t,this._filter(),this.view.updateFilterButtons(t)}addItem(e){this.store.insert({id:Date.now(),title:e,completed:!1},()=>{this.view.clearNewTodo(),this._filter(!0)})}editItemSave(e,t){t.length?this.store.update({id:e,title:t},()=>{this.view.editItemDone(e,t)}):this.removeItem(e)}editItemCancel(e){this.store.find({id:e},t=>{const i=t[0].title;this.view.editItemDone(e,i)})}removeItem(e){this.store.remove({id:e},()=>{this._filter(),this.view.removeItem(e)})}removeCompletedItems(){this.store.remove({completed:!0},this._filter.bind(this))}toggleCompleted(e,t){this.store.update({id:e,completed:t},()=>{this.view.setItemComplete(e,t)})}toggleAll(e){this.store.find({completed:!e},t=>{for(let{id:i}of t)this.toggleCompleted(i,e)}),this._filter()}_filter(e){const t=this._activeRoute;(e||this._lastActiveRoute!==""||this._lastActiveRoute!==t)&&this.store.find({"":p,active:{completed:!1},completed:{completed:!0}}[t],this.view.showItems.bind(this.view)),this.store.count((i,o,s)=>{this.view.setItemsLeft(o),this.view.setClearCompletedButtonVisibility(s),this.view.setCompleteAllCheckbox(s===i),this.view.setMainVisibility(i)}),this._lastActiveRoute=t}}const $=()=>{const l=new g("todos-vanilla-es6"),e=new b,t=new C(e),i=new L(l,t),o=()=>i.setView(document.location.hash);d(window,"load",o),d(window,"hashchange",o)};document.querySelector("#app").innerHTML=`
+	<section class="todoapp">
+		<header class="header">
+			<input class="new-todo" placeholder="What needs to be done?" autofocus>
+		</header>
+		<section style="display:none" class="main">
+			<input id="toggle-all" class="toggle-all" type="checkbox">
+			<label for="toggle-all">Mark all as complete</label>
+			<ul class="todo-list"></ul>
+			<footer class="footer">
+				<span class="todo-count"></span>
+				<ul class="filters">
+					<li>
+						<a href="#/" class="selected">All</a>
+					</li>
+					<li>
+					<a href="#/active">Active</a>
+					</li>
+					<li>
+					<a href="#/completed">Completed</a>
+					</li>
+				</ul>
+				<button class="clear-completed">Clear completed</button>
+			</footer>
+		</section>
+	</section>
+`;$();
